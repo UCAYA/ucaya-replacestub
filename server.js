@@ -28,7 +28,7 @@ function handleUri(uri, request, response) {
         })
       })
       .catch(error => {
-        //console.log("error", error)
+        console.log("error", error)
         response.sendStatus(404);
       });
 }
@@ -36,6 +36,7 @@ function handleUri(uri, request, response) {
 function handleDataUri(dataUri, request, response) {
   var parsedDataUrl =  parseDataUrl(dataUri)
   if(!parsedDataUrl) {
+    console.log("wrong datauri", dataUri)
     response.sendStatus(404);
     return
   }
@@ -49,13 +50,17 @@ function handleDataUri(dataUri, request, response) {
 
 app.get("/", function (request, response) {
   
+  console.log(request.query);
+
   var uri = request.query.uri
   if(request.query.uri)
     handleUri(request.query.uri, request, response)
   else if(request.query.dataUri)
     handleDataUri(request.query.dataUri, request, response)    
-  else
+  else {
+    console.log("no endpoint")
     response.sendStatus(404);
+  }
 });
 
 // listen for requests :)
