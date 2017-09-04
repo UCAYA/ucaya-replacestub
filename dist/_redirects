@@ -1,0 +1,6 @@
+# Redirects from what the browser requests to what we serve
+/              https://ucaya.github.io/vince-run/
+/scrum/*       https://vince-trello-scrum.netlify.com/:splat 200
+/booklet/*     https://vince-trello-booklet.netlify.com/:splat 200
+/power-ups/scrum/*     https://vince-trello-powerups-scrum.netlify.com/:splat 200
+/power-ups/booklet/*   https://vince-trello-powerups-booklet.netlify.com/:splat 200
