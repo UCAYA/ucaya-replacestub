@@ -48,7 +48,7 @@ function handleDataUri(dataUri, request, response) {
 }
 
 
-app.get("/", function (request, response) {
+app.get("/replace/:x", function (request, response) {
   
   console.log(request.query);
 
