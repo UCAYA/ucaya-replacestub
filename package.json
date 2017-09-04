@@ -9,7 +9,9 @@
   "dependencies": {
     "express": "^4.15.3",
     "template-string": "^1.1.2",
-    "node-fetch": "^1.1.2"
+    "node-fetch": "^1.1.2",
+    "atob": "^2.0.3",
+    "parse-data-url": "^0.1.5"
   },
   "engines": {
     "node": "8.x"

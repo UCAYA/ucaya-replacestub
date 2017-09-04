@@ -2,33 +2,58 @@ var express = require('express');
 var app = express();
 var template = require('template-string');
 var fetch = require("node-fetch");
+var atob = require('atob');
+var parseDataUrl = require('parse-data-url');
 
-app.get("/:uri", function (request, response) {
-  
-  var uri = request.params.uri
-  if(uri)
-    fetch(uri)
-      .then(r => {
-          var cloneHeader = function(k) {
-            var v = r.headers.get(k)
-            v && response.setHeader(k,v)
-          }
-          
-          //todo handle etag ?
-          //cloneHeader("etag")
-          cloneHeader("content-type")
-          response.setHeader('cache-control', 'max-age=60')
+var maxage = 315360000
+//var maxage = 0
 
-          return r.text().then(function (t) {
+function handleUri(uri, request, response) {
+  fetch(uri)
+    .then(r => {
+        var cloneHeader = function(k) {
+          var v = r.headers.get(k)
+          v && response.setHeader(k,v)
+        }
+        
+        //todo handle etag ?
+        //cloneHeader("etag")
+        cloneHeader("content-type")
+        response.setHeader('cache-control', 'max-age=' + maxage)
 
-            var content = template(t, request.query)
-            response.send(new Buffer(content))
-          })
+        return r.text().then(function (t) {
+
+          var content = template(t, request.query)
+          response.send(new Buffer(content))
         })
-        .catch(error => {
-          //console.log("error", error)
-          response.sendStatus(404);
-        });
+      })
+      .catch(error => {
+        //console.log("error", error)
+        response.sendStatus(404);
+      });
+}
+
+function handleDataUri(dataUri, request, response) {
+  var parsedDataUrl =  parseDataUrl(dataUri)
+  if(!parsedDataUrl) {
+    response.sendStatus(404);
+    return
+  }
+
+  response.contentType(parsedDataUrl.mediaType)
+  var data = parsedDataUrl.base64 ? atob(parsedDataUrl.data) : parsedDataUrl.data
+  var content = template(data, request.query)
+  response.send(new Buffer(content))
+}
+
+
+app.get("/", function (request, response) {
+  
+  var uri = request.query.uri
+  if(request.query.uri)
+    handleUri(request.query.uri, request, response)
+  else if(request.query.dataUri)
+    handleDataUri(request.query.dataUri, request, response)    
   else
     response.sendStatus(404);
 });
