@@ -5,8 +5,7 @@ var fetch = require("node-fetch");
 var atob = require('atob');
 var parseDataUrl = require('parse-data-url');
 
-var maxage = 315360000
-//var maxage = 0
+var maxage = 86400
 
 function handleUri(uri, request, response) {
   fetch(uri)
@@ -15,11 +14,19 @@ function handleUri(uri, request, response) {
           var v = r.headers.get(k)
           v && response.setHeader(k,v)
         }
+
+        if(request.query.hash 
+            && request.query.hash === request.header("if-match")){
+          response.sendStatus(304)
+          return
+        }
         
-        //todo handle etag ?
-        //cloneHeader("etag")
-        cloneHeader("content-type")
-        response.setHeader('cache-control', 'max-age=' + maxage)
+        response.contentType(r.headers.get('content-type'))
+        response.setHeader('Cache-Control', 'max-age=' + maxage)
+
+        if(request.query.hash) {
+          response.header('ETag', request.query.hash)
+        }
 
         return r.text().then(function (t) {
 
@@ -34,12 +41,25 @@ function handleUri(uri, request, response) {
 }
 
 function handleDataUri(dataUri, request, response) {
+  if(request.query.hash 
+      && request.query.hash === request.header("if-match")){
+    response.sendStatus(304)
+    return
+  }
+
+  if(request.query.hash) {
+    response.header('ETag', request.query.hash)
+  }
+
   var parsedDataUrl =  parseDataUrl(dataUri)
   if(!parsedDataUrl) {
     console.log("wrong datauri", dataUri)
     response.sendStatus(404);
     return
   }
+
+  response.setHeader('Cache-Control', 'max-age=' + maxage)
+  
 
   response.contentType(parsedDataUrl.mediaType)
   var data = parsedDataUrl.base64 ? atob(parsedDataUrl.data) : parsedDataUrl.data
@@ -48,9 +68,10 @@ function handleDataUri(dataUri, request, response) {
 }
 
 
-app.get("/replace/:x", function (request, response) {
+app.get("/replace", function (request, response) {
   
   console.log(request.query);
+  console.log(request.headers);
 
   var uri = request.query.uri
   if(request.query.uri)
